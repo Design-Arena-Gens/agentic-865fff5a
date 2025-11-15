@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model InstagramConfig {
+  id                           Int      @id @default(1)
+  accessToken                  String
+  instagramBusinessAccountId   String
+  verifyToken                  String
+  followerMessage              String
+  likeMessage                  String
+  followerAutomationEnabled    Boolean  @default(true)
+  likeAutomationEnabled        Boolean  @default(true)
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+}
+
+model InstagramEvent {
+  id                    String       @id @default(cuid())
+  eventType             EventType
+  instagramUserId       String
+  instagramUserUsername String?
+  isProcessed           Boolean      @default(false)
+  processedAt           DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  messageLog            MessageLog?
+}
+
+model MessageLog {
+  id                String        @id @default(cuid())
+  instagramUserId   String
+  instagramUsername String?
+  messageType       EventType
+  status            MessageStatus
+  error             String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  event             InstagramEvent? @relation(fields: [eventId], references: [id])
+  eventId           String?        @unique
+
+  @@unique([instagramUserId, messageType])
+}
+
+enum EventType {
+  FOLLOW
+  LIKE
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  FAILED
+}
